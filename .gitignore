@@ -1,0 +1,27 @@
+# Конфигурация с секретами
+src/config.py
+src/config.local.py
+
+# Данные и логи
+data/
+logs/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

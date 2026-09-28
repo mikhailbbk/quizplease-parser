@@ -1,0 +1,50 @@
+name: Fix Git on Server
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fix Git
+        env:
+          SSH_KEY: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
+          HOST: ${{ secrets.SERVER_HOST }}
+        run: |
+          echo "🔧 Fixing Git on server..."
+
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/fix_key
+          chmod 600 ~/.ssh/fix_key
+
+          ssh -i ~/.ssh/fix_key -o StrictHostKeyChecking=no root@$HOST "
+            echo '=== GIT REPAIR: /opt/quizplease-parser ==='
+            cd /opt/quizplease-parser
+
+            echo '1. Backup...'
+            BACKUP=\"/tmp/quizplease-parser-backup-\$(date +%Y%m%d-%H%M%S)\"
+            cp -r . \"\$BACKUP\" 2>/dev/null || echo 'skip'
+
+            echo '2. Clean...'
+            git stash || true
+            git checkout -- . || true
+            git clean -fd || true
+            git gc --prune=now || true
+
+            echo '3. Fetch...'
+            git fetch origin --force
+            git reset --hard origin/main
+
+            echo '4. Verify...'
+            git remote -v
+            git status --short
+            git log --oneline -1
+
+            echo '✅ Git fixed'
+            echo 'Backup: \$BACKUP'
+          "
